@@ -19,7 +19,6 @@ dependencies = [
 [dependency-groups]
 dev = [
     "identify>=2.6.19",
-    "nb-clean>=4.0.1",
     "pre-commit>=4.6.0",
 ]
 
