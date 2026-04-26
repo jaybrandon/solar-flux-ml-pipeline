@@ -1,0 +1,20 @@
+[project]
+name = "solar-flux-ml-pipeline"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ipykernel>=7.2.0",
+    "netcdf4>=1.7.4",
+    "pandas>=3.0.2",
+    "polars>=1.39.3",
+    "requests>=2.33.1",
+    "xarray>=2026.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "identify>=2.6.19",
+    "pre-commit>=4.6.0",
+]
