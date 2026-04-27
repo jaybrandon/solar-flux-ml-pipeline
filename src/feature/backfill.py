@@ -95,6 +95,8 @@ def backfill_data():
 
     df = lf.collect()
 
+    assert isinstance(df, pl.DataFrame), "Expected DataFrame, got InProcessQuery"
+
     df.write_parquet(f"{feature_store_uri}/", partition_by=["year", "month"])
 
 
