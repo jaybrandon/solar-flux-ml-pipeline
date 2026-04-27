@@ -6,7 +6,6 @@ import feature_extraction as feat
 import polars as pl
 import requests
 import xarray as xr
-from tqdm import tqdm
 
 
 def backfill_data():
@@ -32,19 +31,8 @@ def backfill_data():
         with requests.get(dl_url, stream=True) as r:
             r.raise_for_status()
 
-            byte_size = int(r.headers.get("content-length", 0))
-            prog = tqdm(
-                total=byte_size,
-                unit="iB",
-                unit_scale=True,
-                unit_divisor=1024,
-                desc="Downloading data...",
-            )
-
             for chunk in r.iter_content(chunk_size=1024 * 1024):
                 tmp_file.write(chunk)
-                prog.update(len(chunk))
-            prog.close()
 
         temp_path = tmp_file.name
 
