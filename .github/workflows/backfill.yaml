@@ -1,6 +1,10 @@
 name: Feature Backfill Pipeline
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+      - 'feature/backfill-pipeline'
 
 jobs:
   backfill_features:
