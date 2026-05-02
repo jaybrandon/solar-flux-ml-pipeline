@@ -1,0 +1,35 @@
+name: Feature Backfill Pipeline
+
+on: workflow_dispatch
+
+jobs:
+  backfill_features:
+    name: Feature Backfill
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: 'google-github-actions/auth@v3'
+        with:
+          create_credentials_file: true
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_BACKFILL_SERVICE_ACCOUNT }}
+
+      - name: Build Backfill Docker Image
+        run: docker build -t solar-backfill -f Dockerfile.backfill .
+
+      - name: Run Backfill Container
+        run: |
+          docker run --rm \
+            -e FEATURE_STORE_URI=${{ vars.GCP_OFFLINE_FEATURE_STORE_BUCKET }}
+            -e GOOGLE_APPLICATION_CREDENTIALS=${{ steps.auth.outputs.credentials_file_path }} \
+            -v ${{ steps.auth.outputs.credentials_file_path }}:${{ steps.auth.outputs.credentials_file_path }}:ro \
+            solar-backfill
