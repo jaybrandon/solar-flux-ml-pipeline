@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/google"
       version = "7.29.0"
     }
+    github = {
+      source  = "integrations/github"
+      version = "6.12.1"
+    }
   }
 }
 
@@ -13,7 +17,12 @@ provider "google" {
   zone    = var.zone
 }
 
-resource "google_artifact_registry_repository" "docker-repo" {
+provider "github" {
+  owner = var.github_repo_owner
+  token = var.github_token
+}
+
+resource "google_artifact_registry_repository" "docker_repo" {
   location      = var.location
   repository_id = "docker"
   description   = "main docker repository"
@@ -53,7 +62,7 @@ resource "google_artifact_registry_repository" "docker-repo" {
 }
 
 resource "google_storage_bucket" "offline_feature_store" {
-  name          = "solar_flare_offline_fs"
+  name          = "${var.project}_offline_fs"
   location      = var.location
   force_destroy = true
   versioning { enabled = true }
@@ -65,7 +74,7 @@ resource "google_storage_bucket" "offline_feature_store" {
 }
 
 resource "google_storage_bucket" "online_feature_store" {
-  name          = "solar_flare_online_fs"
+  name          = "${var.project}_online_fs"
   location      = var.location
   force_destroy = true
 
@@ -78,4 +87,75 @@ resource "google_storage_bucket" "online_feature_store" {
     condition { age = 1 }
     action { type = "AbortIncompleteMultipartUpload" }
   }
+}
+
+resource "google_iam_workload_identity_pool" "github_pool" {
+  workload_identity_pool_id = "github-ip"
+}
+
+resource "google_iam_workload_identity_pool_provider" "gh_actions_prvdr" {
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github_pool.workload_identity_pool_id
+  workload_identity_pool_provider_id = "gh-actions-prvdr"
+  display_name                       = "GitHub Actions"
+  description                        = "GitHub Actions identity pool provider"
+
+  attribute_condition = <<EOT
+    assertion.repository_owner_id == "${var.github_repo_owner_id}" &&
+    attribute.repository == "${var.github_repo_owner}/${var.github_repo_name}" &&
+    assertion.ref == "refs/heads/main" &&
+    assertion.ref_type == "branch"
+EOT
+  attribute_mapping = {
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.aud"        = "assertion.aud"
+    "attribute.repository" = "assertion.repository"
+    "attribute.workflow"   = "assertion.workflow"
+  }
+  oidc {
+    issuer_uri = "https://token.actions.githubusercontent.com"
+  }
+}
+
+resource "google_service_account" "backfill_sa" {
+  account_id   = "backfill-sa"
+  display_name = "Backfill pipeline Account"
+}
+
+resource "google_service_account_iam_member" "backfill_sa_oidc" {
+  service_account_id = google_service_account.backfill_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.backfill_workflow_name}"
+}
+
+resource "google_storage_bucket_iam_member" "backfill_sa_bucket" {
+  bucket = google_storage_bucket.offline_feature_store.name
+  role   = "roles/storage.objectAdmin"
+
+  member = "serviceAccount:${google_service_account.backfill_sa.email}"
+}
+
+resource "github_actions_variable" "wif_provider_name" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_WORKLOAD_IDENTITY_PROVIDER"
+  value         = google_iam_workload_identity_pool_provider.gh_actions_prvdr.name
+}
+
+resource "github_actions_variable" "backfill_sa_email" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_BACKFILL_SERVICE_ACCOUNT"
+  value         = google_service_account.backfill_sa.email
+}
+
+resource "github_actions_variable" "offline_fs_bucket" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_OFFLINE_FEATURE_STORE_BUCKET"
+  value         = google_storage_bucket.offline_feature_store.url
+}
+
+resource "github_actions_variable" "online_fs_bucket" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_ONLINE_FEATURE_STORE_BUCKET"
+  value         = google_storage_bucket.online_feature_store.url
 }
