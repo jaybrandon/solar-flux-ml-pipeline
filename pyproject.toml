@@ -1,6 +1,6 @@
 [project]
 name = "solar-flux-ml-pipeline"
-version = "0.1.0"
+version = "0.1.1"
 description = "A ml pipeline that dynamically processes GOES x-ray data and feeds it into a ml model to predict upcoming solar flares"
 readme = "README.md"
 requires-python = ">=3.13"
