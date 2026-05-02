@@ -1,0 +1,28 @@
+[project]
+name = "solar-flux-ml-pipeline"
+version = "0.1.0"
+description = "A ml pipeline that dynamically processes GOES x-ray data and feeds it into a ml model to predict upcoming solar flares"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.5",
+    "fsspec>=2026.3.0",
+    "gcsfs>=2026.3.0",
+    "h5py>=3.16.0",
+    "netcdf4>=1.7.4",
+    "pandas>=3.0.2",
+    "polars>=1.39.3",
+    "pyarrow>=24.0.0",
+    "requests>=2.33.1",
+    "xarray[io]>=2026.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "identify>=2.6.19",
+    "ipykernel>=7.2.0",
+    "pre-commit>=4.6.0",
+]
+
+[tool.ruff.lint]
+extend-select = ["I"]
