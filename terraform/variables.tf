@@ -28,6 +28,12 @@ variable "backfill_workflow_name" {
   default     = "Feature Backfill Pipeline"
 }
 
+variable "batch_workflow_name" {
+  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
+  type        = string
+  default     = "Feature Batch Pipeline"
+}
+
 variable "region" {
   default = "europe-west6"
 }
