@@ -136,6 +136,32 @@ resource "google_storage_bucket_iam_member" "backfill_sa_bucket" {
   member = "serviceAccount:${google_service_account.backfill_sa.email}"
 }
 
+resource "google_service_account" "batch_sa" {
+  account_id   = "batch-sa"
+  display_name = "Batch pipeline Account"
+}
+
+resource "google_service_account_iam_member" "batch_sa_oidc" {
+  service_account_id = google_service_account.batch_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.batch_workflow_name}"
+}
+
+resource "google_storage_bucket_iam_member" "batch_sa_offline_bucket" {
+  bucket = google_storage_bucket.offline_feature_store.name
+  role   = "roles/storage.objectAdmin"
+
+  member = "serviceAccount:${google_service_account.batch_sa.email}"
+}
+
+resource "google_storage_bucket_iam_member" "batch_sa_online_bucket" {
+  bucket = google_storage_bucket.online_feature_store.name
+  role   = "roles/storage.objectAdmin"
+
+  member = "serviceAccount:${google_service_account.batch_sa.email}"
+}
+
 resource "github_actions_variable" "wif_provider_name" {
   repository    = var.github_repo_name
   variable_name = "GCP_WORKLOAD_IDENTITY_PROVIDER"
@@ -146,6 +172,12 @@ resource "github_actions_variable" "backfill_sa_email" {
   repository    = var.github_repo_name
   variable_name = "GCP_BACKFILL_SERVICE_ACCOUNT"
   value         = google_service_account.backfill_sa.email
+}
+
+resource "github_actions_variable" "batch_sa_email" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_BATCH_SERVICE_ACCOUNT"
+  value         = google_service_account.batch_sa.email
 }
 
 resource "github_actions_variable" "offline_fs_bucket" {
