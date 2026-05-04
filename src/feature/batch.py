@@ -69,7 +69,7 @@ def process_batch():
     )
 
     # Load offline data for feature calculation
-    history_lf = pl.scan_parquet(offline_fs_uri)
+    history_lf = pl.scan_parquet(f'{offline_fs_uri}/')
 
     latest_history_time = history_lf.select(pl.col("time").max()).collect().item()  # ty: ignore[unresolved-attribute]
 
