@@ -7,11 +7,11 @@ import polars as pl
 import requests
 import xarray as xr
 
+from src.util import load_env
+
 
 def backfill_data():
-    feature_store_uri = os.environ.get("FEATURE_STORE_URI")
-    if not feature_store_uri:
-        raise ValueError("FEATURE_STORE_URI environment variable is not set")
+    feature_store_uri = load_env("FEATURE_STORE_URI")
 
     base_url = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/xrsf-l2-avg1m_science/"
 

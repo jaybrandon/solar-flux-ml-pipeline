@@ -1,10 +1,11 @@
-import os
 from datetime import timedelta
 from io import BytesIO
 
 import feature_extraction as feat
 import polars as pl
 import requests
+
+from src.util import load_env
 
 
 def store_offline_features(lf: pl.LazyFrame, offline_fs_uri: str):
@@ -42,13 +43,8 @@ def store_online_features(lf: pl.LazyFrame, online_fs_uri: str):
 
 
 def process_batch():
-    online_fs_uri = os.environ.get("ONLINE_FS_URI")
-    if not online_fs_uri:
-        raise ValueError("ONLINE_FS_URI environment variable is not set")
-
-    offline_fs_uri = os.environ.get("OFFLINE_FS_URI")
-    if not offline_fs_uri:
-        raise ValueError("OFFLINE_FS_URI environment variable is not set")
+    online_fs_uri = load_env("ONLINE_FS_URI")
+    offline_fs_uri = load_env("OFFLINE_FS_URI")
 
     url = "https://services.swpc.noaa.gov/json/goes/primary/xrays-7-day.json"
     r = requests.get(url)
@@ -73,7 +69,7 @@ def process_batch():
     )
 
     # Load offline data for feature calculation
-    history_lf = pl.scan_parquet("gs://mlops-solar-flux_offline_fs/")
+    history_lf = pl.scan_parquet(offline_fs_uri)
 
     latest_history_time = history_lf.select(pl.col("time").max()).collect().item()  # ty: ignore[unresolved-attribute]
 
