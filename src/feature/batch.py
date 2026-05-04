@@ -1,10 +1,10 @@
 from datetime import timedelta
 from io import BytesIO
 
-import feature_extraction as feat
 import polars as pl
 import requests
 
+import src.feature.feature_extraction as feat
 from src.util import load_env
 
 
