@@ -23,6 +23,10 @@ dev = [
     "ipykernel>=7.2.0",
     "pre-commit>=4.6.0",
 ]
+train = [
+    "wandb>=0.26.1",
+    "xgboost>=3.2.0",
+]
 
 [tool.ruff.lint]
 extend-select = ["I"]
