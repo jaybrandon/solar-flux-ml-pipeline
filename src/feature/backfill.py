@@ -11,7 +11,7 @@ from src.util import load_env
 
 
 def backfill_data():
-    feature_store_uri = load_env("FEATURE_STORE_URI")
+    offline_fs_uri = load_env("OFFLINE_FS_URI")
 
     base_url = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/xrsf-l2-avg1m_science/"
 
@@ -85,7 +85,7 @@ def backfill_data():
 
     assert isinstance(df, pl.DataFrame), "Expected DataFrame, got InProcessQuery"
 
-    df.write_parquet(f"{feature_store_uri}/", partition_by=["year", "month"])
+    df.write_parquet(f"{offline_fs_uri}/", partition_by=["year", "month"])
 
 
 if __name__ == "__main__":

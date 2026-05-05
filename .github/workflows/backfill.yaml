@@ -40,7 +40,7 @@ jobs:
       - name: Run Backfill Container
         run: |
           docker run --rm \
-            -e FEATURE_STORE_URI=${{ vars.GCP_OFFLINE_FEATURE_STORE_BUCKET }} \
+            -e OFFLINE_FS_URI=${{ vars.GCP_OFFLINE_FEATURE_STORE_BUCKET }} \
             -e GOOGLE_APPLICATION_CREDENTIALS=${{ steps.auth.outputs.credentials_file_path }} \
             -v ${{ steps.auth.outputs.credentials_file_path }}:${{ steps.auth.outputs.credentials_file_path }}:ro \
             solar-backfill
