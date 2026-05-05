@@ -54,7 +54,7 @@ def process_batch():
 
     # Load batch data
     batch_lf = pl.read_json(
-        BytesIO(r.content), schema_overrides={"energy": energy, "flux": pl.Float32}
+        BytesIO(r.content), schema_overrides={"energy": energy, "flux": pl.Float64}
     ).lazy()
 
     # Filter for b flux
@@ -65,11 +65,11 @@ def process_batch():
         pl.col("time_tag")
         .str.to_datetime("%Y-%m-%dT%H:%M:%SZ", time_unit="ns")
         .alias("time"),
-        pl.col("flux").alias("xrsb_flux"),
+        (pl.col("flux") * feat.MULTIPLIER).alias("xrsb_flux"),
     )
 
     # Load offline data for feature calculation
-    history_lf = pl.scan_parquet(f'{offline_fs_uri}/')
+    history_lf = pl.scan_parquet(f"{offline_fs_uri}/")
 
     latest_history_time = history_lf.select(pl.col("time").max()).collect().item()  # ty: ignore[unresolved-attribute]
 

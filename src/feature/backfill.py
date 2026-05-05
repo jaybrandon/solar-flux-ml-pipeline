@@ -48,6 +48,10 @@ def backfill_data():
 
     lf = df.lazy()
 
+    lf = lf.with_columns(
+        (pl.col("xrsb_flux").cast(pl.Float64) * feat.MULTIPLIER).alias("xrsb_flux")
+    )
+
     # Null invalid flux values
     lf = lf.with_columns(
         pl.when(
