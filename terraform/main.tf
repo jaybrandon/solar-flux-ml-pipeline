@@ -325,3 +325,9 @@ resource "github_actions_variable" "fastapi_service" {
   variable_name = "GCP_FASTAPI_SERVICE"
   value         = google_cloud_run_v2_service.fastapi.name
 }
+
+resource "github_actions_variable" "location" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_LOCATION"
+  value         = var.location
+}
