@@ -24,6 +24,7 @@ dev = [
     "pre-commit>=4.6.0",
 ]
 train = [
+    "scikit-learn>=1.8.0",
     "wandb>=0.26.1",
     "xgboost>=3.2.0",
 ]
