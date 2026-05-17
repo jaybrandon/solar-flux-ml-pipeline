@@ -55,6 +55,12 @@ variable "train_workflow_name" {
   default     = "Training Pipeline"
 }
 
+variable "api_deploy_workflow_name" {
+  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
+  type        = string
+  default     = "API Deployment"
+}
+
 variable "region" {
   default = "europe-west6"
 }
