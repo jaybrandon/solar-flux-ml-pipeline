@@ -95,4 +95,7 @@ def predict(df: pl.DataFrame):
         "predicted_max_flux_24h": pred / MULTIPLIER,
         "m_class_alert": pred >= M_CLASS_THRESHOLD,
         "model_version": model_data["metadata"]["version"],
+        "wandb_run_id": model_data["metadata"]["run_id"]
+        if "run_id" in model_data["metadata"]
+        else None,
     }
