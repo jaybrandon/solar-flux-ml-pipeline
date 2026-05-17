@@ -7,10 +7,7 @@ from sklearn.metrics import (
     root_mean_squared_log_error,
 )
 
-from src.feature.feature_extraction import MULTIPLIER
-
-M_CLASS_THRESHOLD = 1e-5 * MULTIPLIER
-X_CLASS_THRESHOLD = 1e-4 * MULTIPLIER
+from src.util import M_CLASS_THRESHOLD, X_CLASS_THRESHOLD
 
 
 def calc_metrics(

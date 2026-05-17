@@ -7,7 +7,7 @@ import xgboost as xgb
 import wandb
 from src.training.dataset import INPUT_FEATURES, TARGET, split_train_test
 from src.training.metrics import calc_metrics
-from src.util import load_env, set_seed
+from src.util import REGISTRY_PATH, load_env, set_seed
 
 MODEL_PATH = Path("model")
 
@@ -83,5 +83,4 @@ def eval(config: dict, boost_rounds: int):
 
         artifact = run.log_artifact(MODEL_PATH, type="model")
 
-        registry = "wandb-registry-model/solar-flare-xgboost"
-        run.link_artifact(artifact, registry, aliases=["latest", "production"])
+        run.link_artifact(artifact, REGISTRY_PATH, aliases=["latest", "production"])

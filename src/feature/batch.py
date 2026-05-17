@@ -5,7 +5,7 @@ import polars as pl
 import requests
 
 import src.feature.feature_extraction as feat
-from src.util import load_env
+from src.util import MULTIPLIER, load_env
 
 
 def store_offline_features(lf: pl.LazyFrame, offline_fs_uri: str):
@@ -65,7 +65,7 @@ def process_batch():
         pl.col("time_tag")
         .str.to_datetime("%Y-%m-%dT%H:%M:%SZ", time_unit="ns")
         .alias("time"),
-        (pl.col("flux") * feat.MULTIPLIER).alias("xrsb_flux"),
+        (pl.col("flux") * MULTIPLIER).alias("xrsb_flux"),
     )
 
     # Load offline data for feature calculation

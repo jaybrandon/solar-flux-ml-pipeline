@@ -3,6 +3,12 @@ import random
 
 import numpy as np
 
+REGISTRY_PATH = "wandb-registry-model/solar-flare-xgboost"
+MULTIPLIER = 1000000
+C_CLASS_THRESHOLD = 1e-6 * MULTIPLIER
+M_CLASS_THRESHOLD = 1e-5 * MULTIPLIER
+X_CLASS_THRESHOLD = 1e-4 * MULTIPLIER
+
 
 def set_seed(seed: int = 42):
     random.seed(seed)

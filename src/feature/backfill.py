@@ -7,7 +7,7 @@ import requests
 import xarray as xr
 
 import src.feature.feature_extraction as feat
-from src.util import load_env
+from src.util import MULTIPLIER, load_env
 
 
 def backfill_data():
@@ -49,7 +49,7 @@ def backfill_data():
     lf = df.lazy()
 
     lf = lf.with_columns(
-        (pl.col("xrsb_flux").cast(pl.Float64) * feat.MULTIPLIER).alias("xrsb_flux")
+        (pl.col("xrsb_flux").cast(pl.Float64) * MULTIPLIER).alias("xrsb_flux")
     )
 
     # Null invalid flux values

@@ -1,12 +1,12 @@
 import polars as pl
 
+from src.util import C_CLASS_THRESHOLD
+
 WINDOW_24H = 1440
 WINDOW_12H = 720
 MIN_FRAC = 0.8
 MIN_24H = int(WINDOW_24H * MIN_FRAC)
 MIN_12H = int(WINDOW_12H * MIN_FRAC)
-MULTIPLIER = 1000000
-C_CLASS_THRESHOLD = 1e-6 * MULTIPLIER
 
 
 def get_feature_expressions() -> tuple:
