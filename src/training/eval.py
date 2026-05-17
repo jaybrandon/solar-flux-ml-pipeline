@@ -22,7 +22,7 @@ def eval(config: dict, boost_rounds: int):
 
     train, test = split_train_test()
 
-    with wandb.init(entity, project, config=config) as run:
+    with wandb.init(entity, project, job_type="eval_production", config=config) as run:
         config = run.config.as_dict()
 
         X_train, X_test = train[INPUT_FEATURES], test[INPUT_FEATURES]
