@@ -331,3 +331,9 @@ resource "github_actions_variable" "location" {
   variable_name = "GCP_LOCATION"
   value         = var.location
 }
+
+resource "github_actions_variable" "region" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_REGION"
+  value         = var.region
+}

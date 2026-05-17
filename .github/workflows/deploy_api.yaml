@@ -56,5 +56,6 @@ jobs:
           gcloud run deploy ${{ vars.GCP_FASTAPI_SERVICE }} \
             --image=${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }} \
             --startup-probe httpGet.path=/ready,httpGet.port=8000 \
+            --region ${{ vars.GCP_REGION }} \
             --port 8000 \
             --set-env-vars WANDB_ENTITY=${{ vars.WANDB_ENTITY }},WANDB_PROJECT=${{ vars.WANDB_PROJECT }},ONLINE_FS_URI=${{ vars.GCP_ONLINE_FEATURE_STORE_BUCKET }},WANDB_API_KEY=${{ secrets.WANDB_API_KEY }}
