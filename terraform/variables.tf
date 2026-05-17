@@ -18,7 +18,22 @@ variable "github_repo_owner_id" {
 }
 
 variable "github_token" {
-  description = "GitHub personal access token with access to the repository and variable write permission"
+  description = "GitHub personal access token with access to the repository and variable/secret write permission"
+  type        = string
+}
+
+variable "wandb_entity" {
+  description = "Wandb entity for tracking"
+  type        = string
+}
+
+variable "wandb_project" {
+  description = "Wandb project for tracking"
+  type        = string
+}
+
+variable "wandb_api_key" {
+  description = "Wandb api key"
   type        = string
 }
 
@@ -32,6 +47,12 @@ variable "batch_workflow_name" {
   description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
   type        = string
   default     = "Feature Batch Pipeline"
+}
+
+variable "train_workflow_name" {
+  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
+  type        = string
+  default     = "Training Pipeline"
 }
 
 variable "region" {

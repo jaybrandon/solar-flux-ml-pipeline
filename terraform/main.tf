@@ -162,6 +162,25 @@ resource "google_storage_bucket_iam_member" "batch_sa_online_bucket" {
   member = "serviceAccount:${google_service_account.batch_sa.email}"
 }
 
+resource "google_service_account" "train_sa" {
+  account_id   = "train-sa"
+  display_name = "Training pipeline Account"
+}
+
+resource "google_service_account_iam_member" "train_sa_oidc" {
+  service_account_id = google_service_account.train_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.train_workflow_name}"
+}
+
+resource "google_storage_bucket_iam_member" "train_sa_offline_bucket" {
+  bucket = google_storage_bucket.offline_feature_store.name
+  role   = "roles/storage.objectAdmin"
+
+  member = "serviceAccount:${google_service_account.train_sa.email}"
+}
+
 resource "github_actions_variable" "wif_provider_name" {
   repository    = var.github_repo_name
   variable_name = "GCP_WORKLOAD_IDENTITY_PROVIDER"
@@ -180,6 +199,12 @@ resource "github_actions_variable" "batch_sa_email" {
   value         = google_service_account.batch_sa.email
 }
 
+resource "github_actions_variable" "train_sa_email" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_TRAIN_SERVICE_ACCOUNT"
+  value         = google_service_account.train_sa.email
+}
+
 resource "github_actions_variable" "offline_fs_bucket" {
   repository    = var.github_repo_name
   variable_name = "GCP_OFFLINE_FEATURE_STORE_BUCKET"
@@ -190,4 +215,22 @@ resource "github_actions_variable" "online_fs_bucket" {
   repository    = var.github_repo_name
   variable_name = "GCP_ONLINE_FEATURE_STORE_BUCKET"
   value         = google_storage_bucket.online_feature_store.url
+}
+
+resource "github_actions_variable" "wandb_entity" {
+  repository    = var.github_repo_name
+  variable_name = "WANDB_ENTITY"
+  value         = var.wandb_entity
+}
+
+resource "github_actions_variable" "wandb_project" {
+  repository    = var.github_repo_name
+  variable_name = "WANDB_PROJECT"
+  value         = var.wandb_project
+}
+
+resource "github_actions_secret" "wandb_api_key" {
+  repository  = var.github_repo_name
+  secret_name = "WANDB_API_KEY"
+  value       = var.wandb_api_key
 }
