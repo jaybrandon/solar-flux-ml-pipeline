@@ -259,3 +259,6 @@ gha-creds-*.json
 
 #Wandb
 wandb/
+
+# Model dir
+model/
