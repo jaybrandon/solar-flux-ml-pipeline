@@ -10,7 +10,7 @@ def train():
 
     sweep_id = wandb.sweep(SWEEP_CONFIG, entity, project)
 
-    wandb.agent(sweep_id, function=cross_validate, count=1)
+    wandb.agent(sweep_id, function=cross_validate, count=20)
 
     api = wandb.Api()
     sweep = api.sweep(f"{entity}/{project}/{sweep_id}")
