@@ -3,7 +3,7 @@ from pathlib import Path
 
 import polars as pl
 import xgboost as xgb
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 import wandb
@@ -63,6 +63,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/ready")
+def readiness_probe():
+    if "model" not in model_data:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    if "metadata" not in model_data:
+        raise HTTPException(status_code=503, detail="Model metadata not loaded")
+    return {"status": "ready"}
 
 
 @app.get("/predictions/latest")
