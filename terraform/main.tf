@@ -77,6 +77,34 @@ resource "google_cloud_run_v2_service" "fastapi" {
   lifecycle {
     ignore_changes = [
       template[0].containers[0].image,
+      template[0].containers[0].env,
+      client,
+      client_version,
+    ]
+  }
+}
+
+resource "google_cloud_run_v2_service" "streamlit_ui" {
+  name     = "solar-flux-ui"
+  location = var.location
+
+  template {
+
+    service_account = google_service_account.ui_runtime_sa.email
+
+    containers {
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+
+      env {
+        name  = "API_BASE_URL"
+        value = google_cloud_run_v2_service.fastapi.uri
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].image,
       client,
       client_version,
     ]
@@ -254,6 +282,50 @@ resource "google_cloud_run_v2_service_iam_member" "fastapi_noauth" {
   member   = "allUsers"
 }
 
+resource "google_service_account" "ui_deploy_sa" {
+  account_id   = "ui-deploy-sa"
+  display_name = "UI Deploy Account"
+}
+
+resource "google_service_account_iam_member" "ui_deploy_sa_oidc" {
+  service_account_id = google_service_account.ui_deploy_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.ui_deploy_workflow_name}"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "ui_deploy_sa_gcr" {
+  location = google_cloud_run_v2_service.streamlit_ui.location
+  name     = google_cloud_run_v2_service.streamlit_ui.name
+  role     = "roles/run.developer"
+  member   = "serviceAccount:${google_service_account.ui_deploy_sa.email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "ui_deploy_sa_registry" {
+  location   = google_artifact_registry_repository.docker_repo.location
+  repository = google_artifact_registry_repository.docker_repo.name
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.ui_deploy_sa.email}"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "ui_noauth" {
+  location = google_cloud_run_v2_service.streamlit_ui.location
+  name     = google_cloud_run_v2_service.streamlit_ui.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+resource "google_service_account" "ui_runtime_sa" {
+  account_id   = "ui-runtime-sa"
+  display_name = "UI Runtime"
+}
+
+resource "google_service_account_iam_member" "ui_deployer_runtime" {
+  service_account_id = google_service_account.ui_runtime_sa.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.ui_deploy_sa.email}"
+}
+
 resource "github_actions_variable" "wif_provider_name" {
   repository    = var.github_repo_name
   variable_name = "GCP_WORKLOAD_IDENTITY_PROVIDER"
@@ -282,6 +354,12 @@ resource "github_actions_variable" "api_sa_email" {
   repository    = var.github_repo_name
   variable_name = "GCP_API_SERVICE_ACCOUNT"
   value         = google_service_account.api_deploy_sa.email
+}
+
+resource "github_actions_variable" "ui_sa_email" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_UI_SERVICE_ACCOUNT"
+  value         = google_service_account.ui_deploy_sa.email
 }
 
 resource "github_actions_variable" "offline_fs_bucket" {
@@ -324,6 +402,12 @@ resource "github_actions_variable" "fastapi_service" {
   repository    = var.github_repo_name
   variable_name = "GCP_FASTAPI_SERVICE"
   value         = google_cloud_run_v2_service.fastapi.name
+}
+
+resource "github_actions_variable" "streamlit_service" {
+  repository    = var.github_repo_name
+  variable_name = "GCP_STREAMLIT_SERVICE"
+  value         = google_cloud_run_v2_service.streamlit_ui.name
 }
 
 resource "github_actions_variable" "location" {

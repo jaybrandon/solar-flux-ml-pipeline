@@ -61,6 +61,12 @@ variable "api_deploy_workflow_name" {
   default     = "API Deployment"
 }
 
+variable "ui_deploy_workflow_name" {
+  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
+  type        = string
+  default     = "UI Deployment"
+}
+
 variable "region" {
   default = "europe-west6"
 }
