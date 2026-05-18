@@ -52,5 +52,5 @@ jobs:
       - name: Deploy to GCR
         run: |
           gcloud run deploy ${{ vars.GCP_STREAMLIT_SERVICE }} \
-            --image=${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }} \
+            --image=${{ vars.GCP_REGISTRY_URI }}/solar-ui:${{ github.sha }} \
             --region ${{ vars.GCP_REGION }}
