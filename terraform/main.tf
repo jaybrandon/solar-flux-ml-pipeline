@@ -105,7 +105,7 @@ resource "google_cloud_run_v2_service" "streamlit_ui" {
       }
 
       startup_probe {
-        timeout_seconds   = 240
+        timeout_seconds   = 3
         period_seconds    = 10
         failure_threshold = 3
         http_get {
