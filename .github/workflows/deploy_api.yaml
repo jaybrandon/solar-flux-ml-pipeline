@@ -8,12 +8,18 @@ on:
       - 'src/inference/**'
       - 'Dockerfile.api'
       - 'src/training/dataset.py'
+  workflow_run:
+    workflows: ["Training Pipeline"]
+    types:
+      - completed
 
 
 jobs:
   deploy_api:
     name: Deploy API
     runs-on: ubuntu-latest
+
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
       contents: 'read'
