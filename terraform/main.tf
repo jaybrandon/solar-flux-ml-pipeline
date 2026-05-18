@@ -99,6 +99,20 @@ resource "google_cloud_run_v2_service" "streamlit_ui" {
         name  = "API_BASE_URL"
         value = google_cloud_run_v2_service.fastapi.uri
       }
+
+      ports {
+        container_port = 8501
+      }
+
+      startup_probe {
+        timeout_seconds   = 240
+        period_seconds    = 10
+        failure_threshold = 3
+        http_get {
+          path = "/_stcore/health"
+          port = 8501
+        }
+      }
     }
   }
 

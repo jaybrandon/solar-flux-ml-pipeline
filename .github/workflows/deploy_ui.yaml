@@ -53,5 +53,4 @@ jobs:
         run: |
           gcloud run deploy ${{ vars.GCP_STREAMLIT_SERVICE }} \
             --image=${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }} \
-            --region ${{ vars.GCP_REGION }} \
-            --port 8501
+            --region ${{ vars.GCP_REGION }}
