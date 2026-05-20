@@ -53,14 +53,14 @@ jobs:
           context: .
           file: ./Dockerfile.api
           push: true
-          tags: ${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }}
+          tags: ${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }}-${{ github.run_id }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Deploy to GCR
         run: |
           gcloud run deploy ${{ vars.GCP_FASTAPI_SERVICE }} \
-            --image=${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }} \
+            --image=${{ vars.GCP_REGISTRY_URI }}/solar-api:${{ github.sha }}-${{ github.run_id }} \
             --startup-probe httpGet.path=/ready,httpGet.port=8000 \
             --region ${{ vars.GCP_REGION }} \
             --port 8000 \
