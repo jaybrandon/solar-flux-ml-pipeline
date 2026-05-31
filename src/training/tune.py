@@ -71,9 +71,9 @@ def optimize_params(data: pl.DataFrame):
         trial.set_user_attr("objective", params["objective"])
         trial.set_user_attr("boost_rounds", result_dict["boost_rounds"])
 
-        return result_dict["val_tweedie_deviance"]
+        return result_dict["val_rmsle"]
 
-    study = optuna.create_study(direction="maximize")
+    study = optuna.create_study()
     study.optimize(objective, n_trials=20, callbacks=[wandbc])
 
     best_params = study.best_params
