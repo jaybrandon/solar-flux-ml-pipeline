@@ -5,22 +5,37 @@ on:
 jobs:
   run-backfill:
     uses: ./.github/workflows/backfill.yaml
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     secrets: inherit
 
   run-deploy-ui:
     uses: ./.github/workflows/deploy_ui.yaml
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     secrets: inherit
 
   run-deploy-api:
     uses: ./.github/workflows/deploy_api.yaml
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     secrets: inherit
 
   run-batch:
     needs: run-backfill
     uses: ./.github/workflows/batch.yaml
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     secrets: inherit
 
   run-train:
     needs: [run-batch, run-deploy-api]
     uses: ./.github/workflows/train.yaml
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     secrets: inherit
