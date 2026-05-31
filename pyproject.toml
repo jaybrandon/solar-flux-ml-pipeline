@@ -29,6 +29,7 @@ inference = [
 ]
 train = [
     "optuna>=4.8.0",
+    "optuna-integration[wandb]>=4.8.0",
     "scikit-learn>=1.8.0",
     "wandb>=0.26.1",
     "xgboost>=3.2.0",
