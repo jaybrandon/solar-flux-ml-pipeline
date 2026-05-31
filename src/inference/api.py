@@ -29,8 +29,7 @@ model_data = {}
 online_fs_uri: str
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+def load_model():
     entity = load_env("WANDB_ENTITY")
     project = load_env("WANDB_PROJECT")
     global online_fs_uri
@@ -40,6 +39,13 @@ async def lifespan(app: FastAPI):
     artifact_path = REGISTRY_PATH + ":production"
 
     artifact: wandb.Artifact = api.artifact(artifact_path)
+
+    if (
+        "metadata" in model_data
+        and model_data["metadata"]["version"] == artifact.version
+    ):
+        return False  # No new model to load
+
     artifact_dir = Path(artifact.download())
 
     bst = xgb.Booster(model_file=artifact_dir / "model.json")
@@ -59,10 +65,28 @@ async def lifespan(app: FastAPI):
         metadata["metrics"] = run.summary_metrics
 
     model_data["metadata"] = metadata
+
+    return True
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    load_model()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.post("/reload")
+def reload_model():
+    try:
+        if load_model():
+            return {"status": "success", "message": "Model reloaded successfully"}
+        else:
+            return {"status": "success", "message": "No new model loaded"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/ready")
