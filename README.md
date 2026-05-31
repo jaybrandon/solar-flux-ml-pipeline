@@ -33,6 +33,7 @@ Start by forking this repository to your own GitHub account so you can run GitHu
 ### 2. Prepare Google Cloud
 1. **Create a new Google Cloud Project.** Note down the Project ID.
 2. **Enable necessary APIs.** You can do this via the Google Cloud Console or using the `gcloud` CLI:
+
    ```bash
    gcloud config set project YOUR_PROJECT_ID
 
@@ -44,6 +45,7 @@ Start by forking this repository to your own GitHub account so you can run GitHu
                           sts.googleapis.com
    ```
 3. **Authenticate locally** with `gcloud` so Terraform can provision resources on your behalf:
+
    ```bash
    gcloud auth application-default login
    ```
@@ -105,5 +107,3 @@ Once the Terraform deployment finishes successfully, the foundational infrastruc
 4. Click **Run workflow**.
 
 This setup action will initialize the pipeline, build and deploy necessary Docker images, backfill data, and perform an initial training run.
-
----
