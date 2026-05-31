@@ -103,7 +103,7 @@ Provision the required Artifact Registry, Cloud Run services, IAM roles, and Git
 Once the Terraform deployment finishes successfully, the foundational infrastructure and GitHub secrets are ready.
 1. Navigate to your forked repository on GitHub.
 2. Go to the **Actions** tab.
-3. Select the **`setup`** workflow from the left sidebar.
+3. Select the **`System Setup`** workflow from the left sidebar.
 4. Click **Run workflow**.
 
 This setup action will initialize the pipeline, build and deploy necessary Docker images, backfill data, and perform an initial training run.
