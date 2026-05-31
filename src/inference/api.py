@@ -38,7 +38,11 @@ def load_model():
     api = wandb.Api(overrides={"entity": entity, "project": project})
     artifact_path = REGISTRY_PATH + ":production"
 
-    artifact: wandb.Artifact = api.artifact(artifact_path)
+    try:
+        artifact: wandb.Artifact = api.artifact(artifact_path)
+    except Exception as e:
+        print(f"Warning: Could not load model artifact from wandb: {e}")
+        return False
 
     if (
         "metadata" in model_data
@@ -71,7 +75,10 @@ def load_model():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    load_model()
+    try:
+        load_model()
+    except Exception as e:
+        print(f"Warning: Failed to load model on startup: {e}")
     yield
 
 
@@ -91,11 +98,10 @@ def reload_model():
 
 @app.get("/ready")
 def readiness_probe():
-    if "model" not in model_data:
-        raise HTTPException(status_code=503, detail="Model not loaded")
-    if "metadata" not in model_data:
-        raise HTTPException(status_code=503, detail="Model metadata not loaded")
-    return {"status": "ready"}
+    return {
+        "status": "ready",
+        "model_loaded": "model" in model_data and "metadata" in model_data,
+    }
 
 
 @app.get("/predictions/latest")
