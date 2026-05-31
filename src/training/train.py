@@ -1,27 +1,21 @@
-import os
+import optuna
 
-import wandb
 from src.training.eval import eval
-from src.training.tune import SWEEP_CONFIG, cross_validate
-from src.util import load_env
+from src.training.tune import cross_validate
+from src.util import set_seed
 
 
 def train():
-    entity = load_env("WANDB_ENTITY")
-    project = load_env("WANDB_PROJECT")
+    set_seed(42)
 
-    sweep_id = wandb.sweep(SWEEP_CONFIG, entity, project)
+    study = optuna.create_study(direction="maximize")
+    study.optimize(
+        lambda trial: cross_validate(trial, study.study_name), n_trials=20, timeout=600
+    )
 
-    wandb.agent(sweep_id, function=cross_validate, count=10)
-
-    api = wandb.Api()
-    sweep = api.sweep(f"{entity}/{project}/{sweep_id}")
-    best_run = sweep.best_run()
-
-    for key in ["WANDB_SWEEP_ID", "WANDB_RUN_ID", "WANDB_CONFIG_PATHS"]:
-        os.environ.pop(key, None)
-
-    eval(best_run.config, int(best_run.summary_metrics["boost_rounds"]))
+    best_params = study.best_params
+    best_params["objective"] = study.best_trial.user_attrs["objective"]
+    eval(best_params, int(study.best_trial.user_attrs["boost_rounds"]))
 
 
 if __name__ == "__main__":

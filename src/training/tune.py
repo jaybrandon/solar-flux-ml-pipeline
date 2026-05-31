@@ -1,30 +1,14 @@
 from datetime import datetime, timedelta
 
 import numpy as np
+import optuna
 import polars as pl
 import xgboost as xgb
 
 import wandb
 from src.training.dataset import INPUT_FEATURES, TARGET, split_train_test
 from src.training.metrics import calc_metrics
-from src.util import load_env, set_seed
-
-SWEEP_CONFIG = {
-    "method": "bayes",
-    "metric": {"name": "val_tweedie_deviance", "goal": "maximize"},
-    "parameters": {
-        "objective": {"value": "reg:tweedie"},
-        "tweedie_variance_power": {"min": 1.1, "max": 1.9},
-        "eta": {"distribution": "log_uniform_values", "min": 0.005, "max": 0.3},
-        "gamma": {"min": 0.0, "max": 5.0},
-        "max_depth": {"min": 2, "max": 6},
-        "min_child_weight": {"min": 5, "max": 20},
-        "subsample": {"min": 0.5, "max": 0.8},
-        "colsample_bytree": {"min": 0.5, "max": 0.8},
-        "lambda": {"min": 0.0, "max": 2.0},
-        "alpha": {"min": 0.0, "max": 2.0},
-    },
-}
+from src.util import load_env
 
 
 def ts_split(
@@ -43,15 +27,28 @@ def ts_split(
     return xgb.DMatrix(X_train, label=y_train), xgb.DMatrix(X_val, label=y_val)
 
 
-def cross_validate():
-    set_seed(42)
+def cross_validate(trial: optuna.Trial, group: str):
 
     entity = load_env("WANDB_ENTITY")
     project = load_env("WANDB_PROJECT")
+    params = {
+        "objective": "reg:tweedie",
+        "tweedie_variance_power": trial.suggest_float(
+            "tweedie_variance_power", 1.1, 1.9
+        ),
+        "eta": trial.suggest_float("eta", 0.005, 0.3, log=True),
+        "gamma": trial.suggest_float("gamma", 0.0, 5.0),
+        "max_depth": trial.suggest_int("max_depth", 2, 6),
+        "min_child_weight": trial.suggest_int("min_child_weight", 5, 20),
+        "subsample": trial.suggest_float("subsample", 0.5, 0.8),
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 0.8),
+        "lambda": trial.suggest_float("lambda", 0.0, 2.0),
+        "alpha": trial.suggest_float("alpha", 0.0, 2.0),
+    }
 
     train, _ = split_train_test()
 
-    with wandb.init(entity, project) as run:
+    with wandb.init(entity, project, config=params, group=group) as run:
         config = run.config
 
         min_time = train.select(pl.col("time").min()).item()
@@ -117,8 +114,11 @@ def cross_validate():
 
         df_results = pl.DataFrame(results)
 
-        run.log(df_results.mean().to_dicts()[0])
+        result_dict = df_results.mean().to_dicts()[0]
 
+        run.log(result_dict)
 
-if __name__ == "__main__":
-    cross_validate()
+        trial.set_user_attr("objective", params["objective"])
+        trial.set_user_attr("boost_rounds", result_dict["boost_rounds"])
+
+        return result_dict["val_tweedie_deviance"]

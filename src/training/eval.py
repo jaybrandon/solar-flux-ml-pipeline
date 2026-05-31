@@ -7,13 +7,12 @@ import xgboost as xgb
 import wandb
 from src.training.dataset import INPUT_FEATURES, TARGET, split_train_test
 from src.training.metrics import calc_metrics
-from src.util import REGISTRY_PATH, load_env, set_seed
+from src.util import REGISTRY_PATH, load_env
 
 MODEL_PATH = Path("model")
 
 
 def eval(config: dict, boost_rounds: int):
-    set_seed(42)
 
     MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
