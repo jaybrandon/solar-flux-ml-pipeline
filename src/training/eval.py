@@ -82,4 +82,42 @@ def eval(train: pl.DataFrame, test: pl.DataFrame, config: dict, boost_rounds: in
 
         artifact = run.log_artifact(MODEL_PATH, type="model")
 
-        run.link_artifact(artifact, REGISTRY_PATH, aliases=["latest", "production"])
+        champion_metrics = eval_champion(run, dtest, test_targets, rmsle_constant)
+
+        if (
+            champion_metrics is None
+            or champion_metrics["rmsle"] > test_metrics["test_rmsle"]
+        ):
+            run.link_artifact(artifact, REGISTRY_PATH, aliases=["latest", "production"])
+        else:
+            run.link_artifact(artifact, REGISTRY_PATH, aliases=["latest"])
+
+
+def eval_champion(
+    run: wandb.Run, dtest: xgb.DMatrix, test_targets: np.ndarray, baseline: int | float
+):
+    artifact_path = REGISTRY_PATH + ":production"
+
+    artifact = run.use_artifact(artifact_path)
+
+    if artifact is None:
+        return None
+
+    artifact_dir = Path(artifact.download())
+
+    bst = xgb.Booster(model_file=artifact_dir / "model.json")
+
+    test_preds = bst.predict(dtest)
+
+    metrics = calc_metrics(test_targets, test_preds, baseline)
+
+    run.log(
+        {
+            "champion_metrics": wandb.Table(
+                columns=["metric", "score"],
+                data=[[key, value] for key, value in metrics.items()],
+            )
+        }
+    )
+
+    return metrics

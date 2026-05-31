@@ -14,13 +14,11 @@ def calc_metrics(
     target: np.ndarray,
     preds: np.ndarray,
     baseline: int | float,
-    tweedie_variance_power: float,
+    tweedie_variance_power: float | None = None,
     prefix: str = "",
 ):
     rmsle = root_mean_squared_log_error(target, preds)
     rmsle_baseline = root_mean_squared_log_error(target, np.full(len(target), baseline))
-
-    tweedie_deviance = d2_tweedie_score(target, preds, power=tweedie_variance_power)
 
     actual_m_class = target >= M_CLASS_THRESHOLD
     pred_m_class = preds >= M_CLASS_THRESHOLD
@@ -36,10 +34,9 @@ def calc_metrics(
     recall_x_class = recall_score(actual_x_class, pred_x_class, zero_division=0)
     precision_x_class = precision_score(actual_x_class, pred_x_class, zero_division=0)
 
-    return {
+    metrics = {
         f"{prefix}rmsle": rmsle,
         f"{prefix}rmsle_baseline": rmsle_baseline,
-        f"{prefix}tweedie_deviance": tweedie_deviance,
         f"{prefix}f1_m_class": f1_m_class,
         f"{prefix}recall_m_class": recall_m_class,
         f"{prefix}precision_m_class": precision_m_class,
@@ -47,3 +44,10 @@ def calc_metrics(
         f"{prefix}recall_x_class": recall_x_class,
         f"{prefix}precision_x_class": precision_x_class,
     }
+
+    if tweedie_variance_power is not None:
+        metrics[f"{prefix}tweedie_deviance"] = d2_tweedie_score(
+            target, preds, power=tweedie_variance_power
+        )
+
+    return metrics

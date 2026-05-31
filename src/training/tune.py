@@ -36,7 +36,7 @@ def optimize_params(data: pl.DataFrame):
     }
 
     wandbc = WeightsAndBiasesCallback(
-        metric_name="val_tweedie_deviance", wandb_kwargs=wandb_kwargs, as_multirun=True
+        metric_name="val_rmsle", wandb_kwargs=wandb_kwargs, as_multirun=True
     )
 
     @wandbc.track_in_wandb()
