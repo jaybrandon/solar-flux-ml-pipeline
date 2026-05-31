@@ -7,7 +7,7 @@ import xgboost as xgb
 from optuna.integration.wandb import WeightsAndBiasesCallback
 
 import wandb
-from src.training.dataset import INPUT_FEATURES, TARGET, split_train_test
+from src.training.dataset import INPUT_FEATURES, TARGET
 from src.training.metrics import calc_metrics
 from src.util import load_env
 
@@ -28,7 +28,7 @@ def ts_split(
     return xgb.DMatrix(X_train, label=y_train), xgb.DMatrix(X_val, label=y_val)
 
 
-def optimize_params():
+def optimize_params(data: pl.DataFrame):
     wandb_kwargs = {
         "project": load_env("WANDB_PROJECT"),
         "entity": load_env("WANDB_ENTITY"),
@@ -56,7 +56,7 @@ def optimize_params():
             "alpha": trial.suggest_float("alpha", 0.0, 2.0),
         }
 
-        results = cross_validate(params)
+        results = cross_validate(params, data)
 
         df_results = pl.DataFrame(results)
 
@@ -87,11 +87,9 @@ def optimize_params():
     return best_params, int(study.best_trial.user_attrs["boost_rounds"])
 
 
-def cross_validate(params: dict):
-    train, _ = split_train_test()
-
-    min_time = train.select(pl.col("time").min()).item()
-    max_time = train.select(pl.col("time").max()).item()
+def cross_validate(params: dict, data: pl.DataFrame):
+    min_time = data.select(pl.col("time").min()).item()
+    max_time = data.select(pl.col("time").max()).item()
 
     n_splits = 5
     test_duration = (max_time - min_time) // (2 * n_splits)
@@ -103,7 +101,7 @@ def cross_validate(params: dict):
     for i in range(n_splits):
         test_start = (current_max_time - test_duration).replace(second=0, microsecond=0)
 
-        dtrain, dval = ts_split(train, current_max_time, test_start, gap)
+        dtrain, dval = ts_split(data, current_max_time, test_start, gap)
 
         bst = xgb.train(
             params,

@@ -5,21 +5,19 @@ import polars as pl
 import xgboost as xgb
 
 import wandb
-from src.training.dataset import INPUT_FEATURES, TARGET, split_train_test
+from src.training.dataset import INPUT_FEATURES, TARGET
 from src.training.metrics import calc_metrics
 from src.util import REGISTRY_PATH, load_env
 
 MODEL_PATH = Path("model")
 
 
-def eval(config: dict, boost_rounds: int):
+def eval(train: pl.DataFrame, test: pl.DataFrame, config: dict, boost_rounds: int):
 
     MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
     entity = load_env("WANDB_ENTITY")
     project = load_env("WANDB_PROJECT")
-
-    train, test = split_train_test()
 
     with wandb.init(
         entity, project, job_type="eval_production", config=config, group="eval"
