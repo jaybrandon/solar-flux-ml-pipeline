@@ -98,26 +98,27 @@ def eval_champion(
 ):
     artifact_path = REGISTRY_PATH + ":production"
 
-    artifact = run.use_artifact(artifact_path)
+    try:
+        artifact = run.use_artifact(artifact_path)
 
-    if artifact is None:
+        artifact_dir = Path(artifact.download())
+
+        bst = xgb.Booster(model_file=artifact_dir / "model.json")
+
+        test_preds = bst.predict(dtest)
+
+        metrics = calc_metrics(test_targets, test_preds, baseline)
+
+        run.log(
+            {
+                "champion_metrics": wandb.Table(
+                    columns=["metric", "score"],
+                    data=[[key, value] for key, value in metrics.items()],
+                )
+            }
+        )
+
+        return metrics
+    except Exception as e:
+        print(f"Warning: No champion model found: {e}")
         return None
-
-    artifact_dir = Path(artifact.download())
-
-    bst = xgb.Booster(model_file=artifact_dir / "model.json")
-
-    test_preds = bst.predict(dtest)
-
-    metrics = calc_metrics(test_targets, test_preds, baseline)
-
-    run.log(
-        {
-            "champion_metrics": wandb.Table(
-                columns=["metric", "score"],
-                data=[[key, value] for key, value in metrics.items()],
-            )
-        }
-    )
-
-    return metrics
