@@ -50,3 +50,7 @@ jobs:
             -e GOOGLE_APPLICATION_CREDENTIALS=${{ steps.auth.outputs.credentials_file_path }} \
             -v ${{ steps.auth.outputs.credentials_file_path }}:${{ steps.auth.outputs.credentials_file_path }}:ro \
             solar-train
+
+      - name: Reload API
+        run: |
+          curl --request POST ${{ vars.API_URI }}/reload

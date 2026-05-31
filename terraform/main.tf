@@ -435,3 +435,9 @@ resource "github_actions_variable" "region" {
   variable_name = "GCP_REGION"
   value         = var.region
 }
+
+resource "github_actions_variable" "fastapi_uri" {
+  repository    = var.github_repo_name
+  variable_name = "API_URI"
+  value         = google_cloud_run_v2_service.fastapi.uri
+}
