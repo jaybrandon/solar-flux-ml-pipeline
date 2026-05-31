@@ -36,7 +36,7 @@ def optimize_params(data: pl.DataFrame):
     }
 
     wandbc = WeightsAndBiasesCallback(
-        metric_name="val_tweedie_deviance", wandb_kwargs=wandb_kwargs
+        metric_name="val_tweedie_deviance", wandb_kwargs=wandb_kwargs, as_multirun=True
     )
 
     @wandbc.track_in_wandb()
@@ -65,9 +65,6 @@ def optimize_params(data: pl.DataFrame):
             df_results.select(pl.all().name.suffix("_std")).std().to_dicts()[0]
         )
 
-        wandb.log(
-            {f"param.{key}": value for key, value in params.items()}, step=trial.number
-        )
         wandb.log(result_dict, step=trial.number)
         wandb.log(std_result_dict, step=trial.number)
 
