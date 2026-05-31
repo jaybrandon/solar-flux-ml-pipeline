@@ -37,36 +37,6 @@ variable "wandb_api_key" {
   type        = string
 }
 
-variable "backfill_workflow_name" {
-  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
-  type        = string
-  default     = "Feature Backfill Pipeline"
-}
-
-variable "batch_workflow_name" {
-  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
-  type        = string
-  default     = "Feature Batch Pipeline"
-}
-
-variable "train_workflow_name" {
-  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
-  type        = string
-  default     = "Training Pipeline"
-}
-
-variable "api_deploy_workflow_name" {
-  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
-  type        = string
-  default     = "API Deployment"
-}
-
-variable "ui_deploy_workflow_name" {
-  description = "Name of the GitHub Actions workflow allowed to assume the gcp role"
-  type        = string
-  default     = "UI Deployment"
-}
-
 variable "region" {
   default = "europe-west6"
 }
