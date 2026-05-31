@@ -190,7 +190,7 @@ resource "google_service_account_iam_member" "backfill_sa_oidc" {
   service_account_id = google_service_account.backfill_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.backfill_workflow_name}"
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
 }
 
 resource "google_storage_bucket_iam_member" "backfill_sa_bucket" {
@@ -209,7 +209,7 @@ resource "google_service_account_iam_member" "batch_sa_oidc" {
   service_account_id = google_service_account.batch_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.batch_workflow_name}"
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
 }
 
 resource "google_storage_bucket_iam_member" "batch_sa_offline_bucket" {
@@ -235,7 +235,7 @@ resource "google_service_account_iam_member" "train_sa_oidc" {
   service_account_id = google_service_account.train_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.train_workflow_name}"
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
 }
 
 resource "google_storage_bucket_iam_member" "train_sa_offline_bucket" {
@@ -254,7 +254,7 @@ resource "google_service_account_iam_member" "api_deploy_sa_oidc" {
   service_account_id = google_service_account.api_deploy_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.api_deploy_workflow_name}"
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "api_deploy_sa_gcr" {
@@ -305,7 +305,7 @@ resource "google_service_account_iam_member" "ui_deploy_sa_oidc" {
   service_account_id = google_service_account.ui_deploy_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.workflow/${var.ui_deploy_workflow_name}"
+  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "ui_deploy_sa_gcr" {
