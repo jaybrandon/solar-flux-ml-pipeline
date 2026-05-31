@@ -36,11 +36,11 @@ def optimize_params():
     }
 
     wandbc = WeightsAndBiasesCallback(
-        metric_name="val_tweedie_deviance", wandb_kwargs=wandb_kwargs, as_multirun=True
+        metric_name="val_tweedie_deviance", wandb_kwargs=wandb_kwargs
     )
 
     @wandbc.track_in_wandb()
-    def cross_validate(trial: optuna.Trial):
+    def objective(trial: optuna.Trial):
         params = {
             "objective": "reg:tweedie",
             "tweedie_variance_power": trial.suggest_float(
@@ -56,69 +56,7 @@ def optimize_params():
             "alpha": trial.suggest_float("alpha", 0.0, 2.0),
         }
 
-        train, _ = split_train_test()
-
-        min_time = train.select(pl.col("time").min()).item()
-        max_time = train.select(pl.col("time").max()).item()
-
-        n_splits = 5
-        test_duration = (max_time - min_time) // (2 * n_splits)
-        gap = timedelta(minutes=1440)
-        current_max_time = max_time
-
-        results = []
-
-        for i in range(n_splits):
-            test_start = (current_max_time - test_duration).replace(
-                second=0, microsecond=0
-            )
-
-            dtrain, dval = ts_split(train, current_max_time, test_start, gap)
-
-            bst = xgb.train(
-                params,
-                dtrain,
-                evals=[(dval, "eval")],
-                num_boost_round=2000,
-                early_stopping_rounds=50,
-                verbose_eval=False,
-            )
-
-            train_targets = dtrain.get_label()
-            rmsle_constant = np.expm1(np.mean(np.log1p(train_targets)))
-
-            val_preds = bst.predict(dval, iteration_range=(0, bst.best_iteration + 1))
-            val_targets = dval.get_label()
-            val_metrics = calc_metrics(
-                val_targets,
-                val_preds,
-                rmsle_constant,
-                params["tweedie_variance_power"],
-                "val_",
-            )
-
-            train_preds = bst.predict(
-                dtrain, iteration_range=(0, bst.best_iteration + 1)
-            )
-            train_metrics = calc_metrics(
-                train_targets,
-                train_preds,
-                rmsle_constant,
-                params["tweedie_variance_power"],
-                "train_",
-            )
-
-            fold_metrics = {
-                **val_metrics,
-                **train_metrics,
-                "boost_rounds": bst.best_iteration,
-            }
-
-            results.append(fold_metrics)
-
-            wandb.log({f"fold_{i}/{key}": value for key, value in fold_metrics.items()})
-
-            current_max_time = test_start - timedelta(minutes=1)
+        results = cross_validate(params)
 
         df_results = pl.DataFrame(results)
 
@@ -127,8 +65,11 @@ def optimize_params():
             df_results.select(pl.all().name.suffix("_std")).std().to_dicts()[0]
         )
 
-        wandb.log(result_dict)
-        wandb.log(std_result_dict)
+        wandb.log(
+            {f"param.{key}": value for key, value in params.items()}, step=trial.number
+        )
+        wandb.log(result_dict, step=trial.number)
+        wandb.log(std_result_dict, step=trial.number)
 
         trial.set_user_attr("objective", params["objective"])
         trial.set_user_attr("boost_rounds", result_dict["boost_rounds"])
@@ -136,7 +77,7 @@ def optimize_params():
         return result_dict["val_tweedie_deviance"]
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(cross_validate, n_trials=20, callbacks=[wandbc])
+    study.optimize(objective, n_trials=20, callbacks=[wandbc])
 
     best_params = study.best_params
     best_params["objective"] = study.best_trial.user_attrs["objective"]
@@ -144,3 +85,65 @@ def optimize_params():
     wandb.finish()
 
     return best_params, int(study.best_trial.user_attrs["boost_rounds"])
+
+
+def cross_validate(params: dict):
+    train, _ = split_train_test()
+
+    min_time = train.select(pl.col("time").min()).item()
+    max_time = train.select(pl.col("time").max()).item()
+
+    n_splits = 5
+    test_duration = (max_time - min_time) // (2 * n_splits)
+    gap = timedelta(minutes=1440)
+    current_max_time = max_time
+
+    results = []
+
+    for i in range(n_splits):
+        test_start = (current_max_time - test_duration).replace(second=0, microsecond=0)
+
+        dtrain, dval = ts_split(train, current_max_time, test_start, gap)
+
+        bst = xgb.train(
+            params,
+            dtrain,
+            evals=[(dval, "eval")],
+            num_boost_round=2000,
+            early_stopping_rounds=50,
+            verbose_eval=True,
+        )
+
+        train_targets = dtrain.get_label()
+        rmsle_constant = np.expm1(np.mean(np.log1p(train_targets)))
+
+        val_preds = bst.predict(dval, iteration_range=(0, bst.best_iteration + 1))
+        val_targets = dval.get_label()
+        val_metrics = calc_metrics(
+            val_targets,
+            val_preds,
+            rmsle_constant,
+            params["tweedie_variance_power"],
+            "val_",
+        )
+
+        train_preds = bst.predict(dtrain, iteration_range=(0, bst.best_iteration + 1))
+        train_metrics = calc_metrics(
+            train_targets,
+            train_preds,
+            rmsle_constant,
+            params["tweedie_variance_power"],
+            "train_",
+        )
+
+        fold_metrics = {
+            **val_metrics,
+            **train_metrics,
+            "boost_rounds": bst.best_iteration,
+        }
+
+        results.append(fold_metrics)
+
+        current_max_time = test_start - timedelta(minutes=1)
+
+    return results
