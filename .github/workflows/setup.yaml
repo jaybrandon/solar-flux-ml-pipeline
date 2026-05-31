@@ -1,0 +1,26 @@
+name: System Setup
+on:
+  workflow_dispatch:
+
+jobs:
+  run-backfill:
+    uses: ./.github/workflows/backfill.yaml
+    secrets: inherit
+
+  run-deploy-ui:
+    uses: ./.github/workflows/deploy_ui.yaml
+    secrets: inherit
+
+  run-deploy-api:
+    uses: ./.github/workflows/deploy_api.yaml
+    secrets: inherit
+
+  run-batch:
+    needs: run-backfill
+    uses: ./.github/workflows/batch.yaml
+    secrets: inherit
+
+  run-train:
+    needs: [run-batch, run-deploy-api]
+    uses: ./.github/workflows/train.yaml
+    secrets: inherit
