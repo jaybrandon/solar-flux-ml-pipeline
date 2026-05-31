@@ -1,0 +1,8 @@
+project              = "PROJECT-ID"
+github_repo_owner    = "OWNER"
+github_repo_owner_id = 12345678
+github_repo_name     = "REPOSITORY"
+github_token         = "TOKEN"
+wandb_entity         = "ENTITY"
+wandb_project        = "PROJECT"
+wandb_api_key        = "API_KEY"
